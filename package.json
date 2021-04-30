@@ -1,0 +1,43 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "build": "vite build",
+    "serve": "vite preview",
+    "lint": "eslint --ext .ts,.vue --fix resources/scripts"
+  },
+  "devDependencies": {
+    "@types/lodash.snakecase": "^4.1.6",
+    "@types/lodash.startcase": "^4.4.6",
+    "@typescript-eslint/eslint-plugin": "^4.20.0",
+    "@typescript-eslint/parser": "^4.20.0",
+    "@vue/compiler-sfc": "^3.0.5",
+    "autoprefixer": "^10.2.5",
+    "eslint": "^7.23.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-import-resolver-typescript": "^2.4.0",
+    "eslint-plugin-vue": "^7.8.0",
+    "postcss": "^8.2.9",
+    "vite": "^2.0.1"
+  },
+  "dependencies": {
+    "@headlessui/vue": "^1.0.0",
+    "@heroicons/vue": "^1.0.0",
+    "@tailwindcss/forms": "^0.3.2",
+    "@tailwindcss/typography": "^0.4.0",
+    "@urql/vue": "^0.3.0",
+    "@vitejs/plugin-vue": "^1.1.4",
+    "axios": "^0.21",
+    "date-fns": "^2.21.1",
+    "graphql": "^15.5.0",
+    "laravel-echo": "^1.10.0",
+    "laravel-vite": "^0.0.7",
+    "lodash": "^4.17.19",
+    "lodash.snakecase": "^4.1.1",
+    "lodash.startcase": "^4.4.0",
+    "pusher-js": "^7.0.3",
+    "tailwindcss": "^2.1.1",
+    "vue": "^3.0.5",
+    "vue-router": "^4.0.6"
+  }
+}
