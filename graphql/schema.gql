@@ -5,5 +5,10 @@ scalar Date @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\Date")
 scalar DateTime
   @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
 
+scalar Email
+
+scalar Hashid
+
 #import user.gql
 #import auth.gql
+#import task.gql

@@ -1,62 +1,50 @@
 <template>
-  <form @submit.prevent="onSubmit">
-    <Card>
-      <CardHeader title="Update password" />
+  <FormCard @submit="onSubmit">
+    <CardHeader title="Update password" />
 
-      <CardBody>
-        <div class="grid grid-cols-2 gap-6">
-          <div class="col-span-2">
-            <PasswordField
-              v-model="form.current_password"
-              :errors="errors['current_password']"
-              label="Current password"
-              required
-            />
-          </div>
-
-          <div class="col-span-2 lg:col-span-1">
-            <PasswordField
-              v-model="form.password"
-              :errors="errors['password']"
-              label="New password"
-              required
-            />
-          </div>
-
-          <div class="col-span-2 lg:col-span-1">
-            <PasswordField
-              v-model="form.password_confirmation"
-              :errors="errors['password_confirmation']"
-              label="Password confirmation"
-              required
-            />
-          </div>
+    <CardBody>
+      <div class="grid grid-cols-2 gap-6">
+        <div class="col-span-2">
+          <PasswordInput
+            v-model="form.current_password"
+            :errors="errors.current_password"
+            label="Current password"
+            required
+          />
         </div>
-      </CardBody>
 
-      <CardFooter>
-        <WhiteButton
-          type="button"
-          @click="reset"
-        >
-          Reset
-        </WhiteButton>
+        <div class="col-span-2 lg:col-span-1">
+          <PasswordInput
+            v-model="form.password"
+            :errors="errors.password"
+            label="New password"
+            required
+          />
+        </div>
 
-        <Button
-          :disabled="fetching"
-          class="ml-3"
-        >
-          Update
-        </Button>
-      </CardFooter>
-    </Card>
-  </form>
+        <div class="col-span-2 lg:col-span-1">
+          <PasswordInput
+            v-model="form.password_confirmation"
+            :errors="errors.password_confirmation"
+            label="Password confirmation"
+            required
+          />
+        </div>
+      </div>
+    </CardBody>
+
+    <EditCardFooter v-bind="{ onReset, fetching }" />
+  </FormCard>
 </template>
 
 <script lang="ts">
 import { defineComponent, ref } from 'vue';
 import {
-  Card, CardHeader, CardBody, CardFooter, WhiteButton, Button, PasswordField,
+  FormCard,
+  CardHeader,
+  CardBody,
+  EditCardFooter,
+  PasswordInput,
 } from '@/views/components';
 import axios from 'axios';
 import loggedIn from '@/scripts/auth';
@@ -64,7 +52,11 @@ import { notify } from '@/scripts/notifications';
 
 export default defineComponent({
   components: {
-    Card, CardHeader, CardBody, CardFooter, WhiteButton, Button, PasswordField,
+    FormCard,
+    CardHeader,
+    CardBody,
+    EditCardFooter,
+    PasswordInput,
   },
 
   props: {
@@ -79,19 +71,23 @@ export default defineComponent({
     const fetching = ref(false);
     const errors = ref();
 
-    const reset = () => {
-      form.value = { current_password: '', password: '', password_confirmation: '' };
+    const onReset = () => {
+      form.value = {
+        current_password: '',
+        password: '',
+        password_confirmation: '',
+      };
       errors.value = {};
     };
 
-    reset();
+    onReset();
 
     const onSubmit = async () => {
       fetching.value = true;
 
       try {
         await axios.put('/user/password', form.value);
-        errors.value = {};
+        onReset();
         loggedIn.value = true;
         notify.success('Your password was successfully updated.');
       } catch (e) {
@@ -106,7 +102,7 @@ export default defineComponent({
       errors,
       onSubmit,
       fetching,
-      reset,
+      onReset,
     };
   },
 });

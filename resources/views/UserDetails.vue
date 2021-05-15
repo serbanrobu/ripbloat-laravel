@@ -4,22 +4,52 @@
       <CardHeader>
         <template #subtitle>
           <Id>{{ user.id }}</Id>
+
+          <Badge
+            v-if="user.deletedAt"
+            class="ml-3"
+            color="danger"
+            rounded
+          >
+            Deleted
+          </Badge>
         </template>
 
+        <WarningConfirm
+          v-if="user.deletedAt"
+          title="Restore user"
+          confirm-text="Restore"
+          @confirm="onRestore"
+        >
+          Are you sure you want to restore the user <b>{{ user.name }}</b>?
+
+          <template #activator="props">
+            <Button
+              v-bind="props"
+              color="warning"
+              secondary
+            >
+              Restore
+            </Button>
+          </template>
+        </WarningConfirm>
+
         <DangerConfirm
+          v-else
           title="Delete user"
-          action-text="Delete"
+          confirm-text="Delete"
           @confirm="onDelete"
         >
           Are you sure you want to delete the user <b>{{ user.name }}</b>?
 
           <template #activator="props">
-            <SecondaryButton
+            <Button
               v-bind="props"
               color="danger"
+              secondary
             >
               Delete
-            </SecondaryButton>
+            </Button>
           </template>
         </DangerConfirm>
 
@@ -31,84 +61,104 @@
         </Button>
       </CardHeader>
 
-      <CardBody>
-        <dl class="grid grid-cols-2 gap-6">
-          <div class="col-span-2 lg:col-span-1">
-            <Dt>Name</Dt>
-            <Dd>{{ user.name }}</Dd>
-          </div>
+      <UserDetailsCardBody :user="user" />
+    </Card>
 
-          <div class="col-span-2 lg:col-span-1">
-            <Dt>Email address</Dt>
-            <Dd>{{ user.email }}</Dd>
-          </div>
+    <Card class="mt-10">
+      <CardHeader title="User Created Tasks">
+        <Button to="/tasks/create">
+          Create
+        </Button>
+      </CardHeader>
 
-          <div class="col-span-2 lg:col-span-1">
-            <Dt>Created At</Dt>
-            <Dd><DateTime>{{ user.createdAt }}</DateTime></Dd>
-          </div>
+      <List v-if="user.createdTasks.length">
+        <ListItem
+          v-for="task in user.createdTasks"
+          :key="task.id"
+        >
+          <A :to="{ name: 'TaskDetails', params: { id: task.id } }">
+            {{ task.title }}
+          </A>
+        </ListItem>
+      </List>
 
-          <div class="col-span-2 lg:col-span-1">
-            <Dt>Updated At</Dt>
-            <Dd><DateTime>{{ user.updatedAt }}</DateTime></Dd>
-          </div>
-        </dl>
-      </CardBody>
+      <div
+        v-else
+        class="bg-white px-4 py-3 flex items-center justify-center sm:px-6 text-neutral-500"
+      >
+        No records found
+      </div>
+    </Card>
+
+    <Card class="mt-10">
+      <CardHeader title="User Assigned Tasks" />
+
+      <List v-if="user.assignedTasks.length">
+        <ListItem
+          v-for="task in user.assignedTasks"
+          :key="task.id"
+        >
+          <A :to="{ name: 'TaskDetails', params: { id: task.id } }">
+            {{ task.title }}
+          </A>
+        </ListItem>
+      </List>
+
+      <div
+        v-else
+        class="bg-white px-4 py-3 flex items-center justify-center sm:px-6 text-neutral-500"
+      >
+        No records found
+      </div>
     </Card>
   </Container>
 </template>
 
 <script lang="ts">
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, PropType } from 'vue';
 import {
   Container,
   CardHeader,
-  CardBody,
   Card,
-  Button,
-  Dt,
-  Dd,
-  Id,
-  DateTime,
   DangerConfirm,
-  SecondaryButton,
+  Button,
+  Id,
+  WarningConfirm,
+  Badge,
+  List,
+  ListItem,
+  A,
 } from '@/views/components';
+import UserDetailsCardBody from '@/views/components/UserDetailsCardBody.vue';
 import { notify } from '@/scripts/notifications';
-import { useMutation } from '@urql/vue';
-import { useRouter } from 'vue-router';
+import { useDeleteUser, User, useRestoreUser } from '@/scripts/composables';
 
 export default defineComponent({
   components: {
     Container,
     CardHeader,
-    CardBody,
+    UserDetailsCardBody,
     Card,
-    Button,
-    Dt,
-    Dd,
-    Id,
-    DateTime,
     DangerConfirm,
-    SecondaryButton,
+    Button,
+    Id,
+    WarningConfirm,
+    Badge,
+    List,
+    ListItem,
+    A,
   },
 
   props: {
     user: {
-      type: Object,
+      type: Object as PropType<User>,
       required: true,
     },
   },
 
   setup(props) {
-    const router = useRouter();
-
-    const { executeMutation: deleteUser } = useMutation(`
-      mutation($id: ID!) {
-        deleteUser(id: $id) {
-          id
-        }
-      }
-    `);
+    const { deleteUser } = useDeleteUser();
+    const { restoreUser } = useRestoreUser();
 
     const onDelete = async () => {
       const { error } = await deleteUser({ id: props.user.id });
@@ -123,12 +173,26 @@ export default defineComponent({
         h('b', props.user.name),
         ' was successfully deleted!',
       ]);
+    };
 
-      router.push('/users');
+    const onRestore = async () => {
+      const { error } = await restoreUser({ id: props.user.id });
+
+      if (error) {
+        notify.danger(error.message, { timeout: -1 });
+        return;
+      }
+
+      notify.success(() => [
+        'The user ',
+        h('b', props.user.name),
+        ' was successfully restored!',
+      ]);
     };
 
     return {
       onDelete,
+      onRestore,
     };
   },
 });

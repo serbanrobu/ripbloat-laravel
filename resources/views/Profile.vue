@@ -1,204 +1,141 @@
 <template>
-  <Container>
-    <form @submit.prevent="onSubmit">
-      <Card v-if="user">
-        <CardHeader>
-          <template #subtitle>
-            <Id>{{ user.id }}</Id>
+  <Container v-if="authUser">
+    <FormCard @submit="onSubmit">
+      <CardHeader>
+        <template #subtitle>
+          <Id>{{ authUser.id }}</Id>
+        </template>
+
+        <DangerConfirm
+          title="Delete account"
+          confirm-text="Delete"
+          @confirm="onDelete"
+        >
+          Are you sure you want to delete your account?
+
+          <template #activator="props">
+            <Button
+              v-bind="props"
+              type="button"
+              color="danger"
+              secondary
+            >
+              Delete
+            </Button>
           </template>
+        </DangerConfirm>
+      </CardHeader>
 
-          <DangerConfirm
-            title="Delete account"
-            action-text="Delete"
-            @confirm="onDelete"
-          >
-            Are you sure you want to delete your account?
+      <UserDetailsCardBody :user="authUser">
+        <template #name>
+          <Input
+            v-model="form.name"
+            :errors="errors.name"
+            label="Name"
+            required
+          />
+        </template>
 
-            <template #activator="props">
-              <SecondaryButton
-                v-bind="props"
-                type="button"
-                color="danger"
-              >
-                Delete
-              </SecondaryButton>
-            </template>
-          </DangerConfirm>
-        </CardHeader>
+        <template #email>
+          <EmailInput
+            v-model="form.email"
+            :errors="errors.email"
+            required
+          />
+        </template>
+      </UserDetailsCardBody>
 
-        <CardBody>
-          <dl class="grid grid-cols-2 gap-6">
-            <div class="col-span-2 lg:col-span-1">
-              <TextField
-                v-model="form.name"
-                :errors="errors['input.name']"
-                label="Name"
-                required
-              />
-            </div>
-
-            <div class="col-span-2 lg:col-span-1">
-              <EmailField
-                v-model="form.email"
-                :errors="errors['input.email']"
-                required
-              />
-            </div>
-
-            <div class="col-span-2 lg:col-span-1">
-              <Dt>Created At</Dt>
-
-              <Dd>
-                <DateTime>{{ user.createdAt }}</DateTime>
-              </Dd>
-            </div>
-
-            <div class="col-span-2 lg:col-span-1">
-              <Dt>Updated At</Dt>
-
-              <Dd>
-                <DateTime>{{ user.updatedAt }}</DateTime>
-              </Dd>
-            </div>
-          </dl>
-        </CardBody>
-
-        <CardFooter>
-          <WhiteButton
-            type="button"
-            @click="reset"
-          >
-            Reset
-          </WhiteButton>
-
-          <Button
-            :disabled="fetching"
-            class="ml-3"
-          >
-            Update
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+      <EditCardFooter v-bind="{ onReset, updating }" />
+    </FormCard>
 
     <UpdatePasswordForm
-      v-if="user"
-      :user-id="user.id"
+      v-if="authUser"
+      :user-id="authUser.id"
       class="mt-10"
     />
   </Container>
+
+  <Loading v-else-if="fetching" />
+  <NotFound v-else />
 </template>
 
 <script lang="ts">
-import {
-  computed, defineComponent, ref, watchEffect,
-} from 'vue';
+import { defineComponent, ref, watchEffect } from 'vue';
 import {
   Container,
   CardHeader,
-  CardBody,
-  Card,
-  Dt,
-  Dd,
-  Id,
-  DateTime,
   DangerConfirm,
-  SecondaryButton,
-  TextField,
-  EmailField,
-  WhiteButton,
   Button,
-  CardFooter,
+  Input,
+  EmailInput,
+  FormCard,
+  EditCardFooter,
+  Id,
+  Loading,
+  NotFound,
 } from '@/views/components';
+import UserDetailsCardBody from '@/views/components/UserDetailsCardBody.vue';
 import { notify } from '@/scripts/notifications';
-import { gql, useMutation, useQuery } from '@urql/vue';
 import { useRouter } from 'vue-router';
 import { loggedIn } from '@/scripts/auth';
-import { useErrors } from '@/scripts/composables';
+import {
+  useAuthUser,
+  useUpdateUser,
+  useDeleteUser,
+} from '@/scripts/composables';
 import UpdatePasswordForm from '@/views/components/UpdatePasswordForm.vue';
 
 export default defineComponent({
   components: {
     Container,
     CardHeader,
-    CardBody,
-    Card,
-    Dt,
-    Dd,
-    Id,
-    DateTime,
+    UserDetailsCardBody,
     DangerConfirm,
-    SecondaryButton,
-    TextField,
-    EmailField,
-    WhiteButton,
     Button,
-    CardFooter,
+    Input,
+    EmailInput,
     UpdatePasswordForm,
+    FormCard,
+    EditCardFooter,
+    Id,
+    Loading,
+    NotFound,
   },
 
   setup() {
     const router = useRouter();
-
-    const { data } = useQuery({
-      query: gql`
-        {
-          authUser {
-            id
-            name
-            email
-            createdAt
-            updatedAt
-          }
-        }
-      `,
-    });
-
-    const user = computed(() => data.value?.authUser);
+    const { authUser, fetching } = useAuthUser();
     const form = ref();
 
-    const { executeMutation: updateUser, fetching, error } = useMutation(gql`
-      mutation($input: UpdateUser!) {
-        updateUser(input: $input) {
-          id
-        }
-      }
-    `);
+    const { updateUser, updating, errors } = useUpdateUser();
 
-    const errors = useErrors(error);
-
-    const reset = () => {
-      const { name, email } = user.value ?? {};
+    const onReset = () => {
+      const { name, email } = authUser.value ?? {};
       form.value = { name, email };
       errors.value = {};
     };
 
-    watchEffect(reset);
+    watchEffect(onReset);
 
     const onSubmit = async () => {
-      const { id } = user.value;
-      await updateUser({ input: { id, ...form.value! } });
+      const { id } = authUser.value!;
+      const { error } = await updateUser({ id, ...form.value! });
 
-      if (error.value) {
+      if (error) {
         return;
       }
 
-      notify.success('Your account was successfully updated.');
+      notify.success('Your profile was successfully updated.');
     };
 
-    const { executeMutation: deleteAuthUser } = useMutation(`
-      mutation {
-        deleteAuthUser {
-          id
-        }
-      }
-    `);
+    const { deleteUser } = useDeleteUser();
 
     const onDelete = async () => {
-      await deleteAuthUser({});
+      const { id } = authUser.value!;
+      const { error } = await deleteUser({ id });
 
-      if (error.value) {
-        notify.danger(error.value.message, { timeout: -1 });
+      if (error) {
+        notify.danger(error.message, { timeout: -1 });
         return;
       }
 
@@ -207,12 +144,13 @@ export default defineComponent({
     };
 
     return {
-      user,
+      authUser,
       errors,
       form,
-      reset,
+      onReset,
       onSubmit,
       fetching,
+      updating,
       onDelete,
     };
   },

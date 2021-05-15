@@ -3,6 +3,7 @@ const typography = require('@tailwindcss/typography');
 const colors = require('tailwindcss/colors');
 
 module.exports = {
+  // mode: 'jit',
   purge: [],
   presets: [],
   darkMode: false, // or 'media' or 'class'
@@ -19,8 +20,8 @@ module.exports = {
       primary: colors.indigo,
       neutral: colors.gray,
       success: colors.green,
-      secondary: colors.orange,
-      warning: colors.yellow,
+      secondary: colors.pink,
+      warning: colors.orange,
       info: colors.blue,
 
       transparent: 'transparent',

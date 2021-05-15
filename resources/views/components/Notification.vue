@@ -9,8 +9,8 @@
   >
     <div
       v-if="show"
-      class="max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto
-      ring-1 ring-black ring-opacity-5 overflow-hidden"
+      :class="`max-w-sm w-full bg-white shadow-lg rounded-lg
+      pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden`"
     >
       <div class="p-4">
         <div
@@ -60,9 +60,9 @@
             class="ml-4 flex-shrink-0 flex"
           >
             <button
-              class="bg-white rounded-md inline-flex text-neutral-400
+              :class="`bg-white rounded-md inline-flex text-neutral-400
               hover:text-neutral-500 focus:outline-none focus:ring-2
-              focus:ring-offset-2 focus:ring-indigo-500"
+              focus:ring-offset-2 focus:ring-indigo-500`"
               @click="show = false"
             >
               <span class="sr-only">Close</span>
@@ -81,12 +81,16 @@
 
 <script lang="ts">
 import {
-  defineComponent, ref, PropType, FunctionalComponent, watchEffect,
+  defineComponent,
+  ref,
+  PropType,
+  FunctionalComponent,
+  watchEffect,
 } from 'vue';
 import { CheckCircleIcon } from '@heroicons/vue/outline';
 import { XIcon } from '@heroicons/vue/solid';
 
-export const Notification = defineComponent({
+export default defineComponent({
   components: {
     CheckCircleIcon,
     XIcon,
@@ -97,27 +101,22 @@ export const Notification = defineComponent({
       type: [String, Function],
       required: true,
     },
-
     description: {
       type: [String, Function],
       default: undefined,
     },
-
     icon: {
       type: Function as PropType<FunctionalComponent>,
       default: undefined,
     },
-
     color: {
       type: String,
       default: 'primary',
     },
-
     timeout: {
       type: Number,
       default: 4000,
     },
-
     dismissible: {
       type: Boolean,
       default: true,
@@ -126,12 +125,15 @@ export const Notification = defineComponent({
 
   setup(props) {
     const show = ref(true);
+
     watchEffect(() => {
       if (props.timeout < 0) {
         return;
       }
 
-      setTimeout(() => { show.value = false; }, props.timeout);
+      setTimeout(() => {
+        show.value = false;
+      }, props.timeout);
     });
 
     return {
@@ -139,6 +141,4 @@ export const Notification = defineComponent({
     };
   },
 });
-
-export default Notification;
 </script>

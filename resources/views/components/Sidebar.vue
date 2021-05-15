@@ -8,7 +8,7 @@
       static
       class="fixed inset-0 flex z-40 md:hidden"
       :open="$props.modelValue"
-      @close="$emit('update:modelValue', false)"
+      @close="$emit('update:model-value', false)"
     >
       <TransitionChild
         as="template"
@@ -31,7 +31,9 @@
         leave-from="translate-x-0"
         leave-to="-translate-x-full"
       >
-        <div class="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-neutral-800">
+        <div
+          class="relative flex-1 flex flex-col max-w-xs w-full pt-5 pb-4 bg-neutral-800"
+        >
           <TransitionChild
             as="template"
             enter="ease-in-out duration-300"
@@ -43,10 +45,10 @@
           >
             <div class="absolute top-0 right-0 -mr-12 pt-2">
               <button
-                class="ml-1 flex items-center justify-center h-10 w-10
+                :class="`ml-1 flex items-center justify-center h-10 w-10
                 rounded-full focus:outline-none focus:ring-2 focus:ring-inset
-                focus:ring-white"
-                @click="$emit('update:modelValue', false)"
+                focus:ring-white`"
+                @click="$emit('update:model-value', false)"
               >
                 <span class="sr-only">Close sidebar</span>
 
@@ -170,7 +172,9 @@ import {
   TransitionChild,
   TransitionRoot,
 } from '@headlessui/vue';
-import { XIcon, HomeIcon, UsersIcon } from '@heroicons/vue/outline';
+import {
+  XIcon, HomeIcon, UsersIcon, ClipboardCheckIcon,
+} from '@heroicons/vue/outline';
 
 export default defineComponent({
   components: {
@@ -182,7 +186,10 @@ export default defineComponent({
   },
 
   props: {
-    modelValue: Boolean,
+    modelValue: {
+      type: Boolean,
+      default: false,
+    },
 
     items: {
       type: Array,
@@ -198,10 +205,15 @@ export default defineComponent({
           name: 'Users',
           icon: UsersIcon,
         },
+        {
+          to: '/tasks',
+          name: 'Tasks',
+          icon: ClipboardCheckIcon,
+        },
       ],
     },
   },
 
-  emits: ['update:modelValue'],
+  emits: ['update:model-value'],
 });
 </script>

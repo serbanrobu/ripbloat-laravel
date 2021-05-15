@@ -6,7 +6,7 @@ import {
   RouteRecordRaw,
 } from 'vue-router';
 import { startCase } from 'lodash';
-import { Breadcrumbs } from '@/views/components';
+import { Breadcrumbs, NotFound } from '@/views/components';
 import { loggedIn } from '@/scripts/auth';
 
 const authGuard: NavigationGuard = (to, _from, next) => {
@@ -44,7 +44,10 @@ const routes: RouteRecordRaw[] = [
       {
         path: '/users',
         name: 'Users',
-        component: () => import(/* webpackChunkName: "Users" */ '@/views/Users.vue'),
+        components: {
+          Breadcrumbs,
+          default: () => import(/* webpackChunkName: "Users" */ '@/views/Users.vue'),
+        },
       },
       {
         path: '/users/create',
@@ -78,6 +81,46 @@ const routes: RouteRecordRaw[] = [
           },
         ],
       },
+      {
+        path: '/tasks',
+        name: 'Tasks',
+        components: {
+          Breadcrumbs,
+          default: () => import(/* webpackChunkName: "Tasks" */ '@/views/Tasks.vue'),
+        },
+      },
+      {
+        path: '/tasks/create',
+        name: 'CreateTask',
+        components: {
+          Breadcrumbs: h(Breadcrumbs, { pages: ['Tasks'] }),
+          default: () => import(
+            /* webpackChunkName: "CreateTask" */ '@/views/CreateTask.vue'
+          ),
+        },
+      },
+      {
+        path: '/tasks/:id',
+        props: true,
+        components: {
+          Breadcrumbs: h(Breadcrumbs, { pages: ['Tasks'] }),
+          default: () => import(/* webpackChunkName: "Task" */ '@/views/Task.vue'),
+        },
+        children: [
+          {
+            path: '',
+            name: 'TaskDetails',
+            component: () => import(
+              /* webpackChunkName: "TaskDetails" */ '@/views/TaskDetails.vue'
+            ),
+          },
+          {
+            path: 'edit',
+            name: 'EditTask',
+            component: () => import(/* webpackChunkName: "EditTask" */ '@/views/EditTask.vue'),
+          },
+        ],
+      },
     ],
   },
   {
@@ -96,7 +139,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: () => import(/* webpackChunkName: "NotFound" */ '@/views/NotFound.vue'),
+    component: NotFound,
   },
 ];
 

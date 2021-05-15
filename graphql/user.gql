@@ -1,39 +1,36 @@
 extend type Query @guard {
   users(
-    orderBy: _ @orderBy(columns: ["name", "email", "created_at"])
-  ): [User!]! @paginate(defaultCount: 10)
+    search: String @search
+    orderBy: _ @orderBy(columns: ["name", "email", "created_at", "deleted_at"])
+  ): [User!]! @paginate @softDeletes
 
-  user(id: ID! @hashid @eq): User @find
+  user(id: Hashid! @eq): User @find @softDeletes
   authUser: User @auth
 }
 
 extend type Mutation @guard {
-  createUser(input: CreateUser! @spread): User! @create
-  updateUser(input: UpdateUser! @spread): User! @update
-  deleteUser(id: ID! @hashid): User! @delete
+  createUser(
+    name: String! @rules(apply: ["required"])
+    email: Email! @rules(apply: ["unique:users,email"])
+    # TODO: delete this line
+    password: String! = "secret" @hash
+  ): User! @create
+
+  updateUser(id: Hashid!, name: String!, email: Email!): User!
+    @validator
+    @update
+
+  deleteUser(id: Hashid!): User! @delete
+  restoreUser(id: Hashid!): User! @restore
 }
 
 type User {
-  id: ID! @hashid
+  id: Hashid!
   name: String!
-  email: String!
+  email: Email!
+  deletedAt: DateTime @rename(attribute: "deleted_at")
   createdAt: DateTime! @rename(attribute: "created_at")
   updatedAt: DateTime! @rename(attribute: "updated_at")
-}
-
-input CreateUser {
-  name: String! @rules(attribute: "name", apply: ["required"])
-  email: String!
-    @rules(
-      attribute: "email"
-      apply: ["required", "email", "unique:users,email"]
-    )
-  # TODO: delete this line
-  password: String! = "secret" @hash
-}
-
-input UpdateUser {
-  id: ID! @hashid
-  name: String! @rules(attribute: "name", apply: ["required"])
-  email: String! @rules(attribute: "email", apply: ["required", "email"])
+  createdTasks: [Task!]! @hasMany
+  assignedTasks: [Task!]! @belongsToMany
 }

@@ -1,4 +1,4 @@
 extend type Mutation {
-  login(email: String!, password: String!): User!
+  login(email: Email!, password: String!): User!
   logout: User @guard
 }

@@ -11,8 +11,8 @@
       @close="open = false"
     >
       <div
-        class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20
-        text-center sm:block sm:p-0"
+        :class="`flex items-end justify-center min-h-screen pt-4 px-4 pb-20
+        text-center sm:block sm:p-0`"
       >
         <TransitionChild
           as="template"
@@ -24,7 +24,7 @@
           leave-to="opacity-0"
         >
           <DialogOverlay
-            class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            class="fixed inset-0 bg-neutral-500 bg-opacity-75 transition-opacity"
           />
         </TransitionChild>
 
@@ -45,9 +45,9 @@
           leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         >
           <div
-            class="inline-block align-bottom bg-white rounded-lg text-left
+            :class="`inline-block align-bottom bg-white rounded-lg text-left
             overflow-hidden shadow-xl transform transition-all sm:my-8
-            sm:align-middle sm:max-w-lg sm:w-full"
+            sm:align-middle sm:max-w-lg sm:w-full`"
           >
             <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div class="sm:flex sm:items-start">
@@ -68,13 +68,13 @@
                   <DialogTitle
                     v-if="title"
                     as="h3"
-                    class="text-lg leading-6 font-medium text-gray-900"
+                    class="text-lg leading-6 font-medium text-neutral-900"
                   >
                     {{ title }}
                   </DialogTitle>
 
                   <div class="mt-2">
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-neutral-500">
                       <slot />
                     </p>
                   </div>
@@ -82,27 +82,29 @@
               </div>
             </div>
 
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
+            <div
+              class="bg-neutral-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
+            >
+              <Button
                 type="button"
-                :class="`w-full inline-flex justify-center rounded-md border
-                border-transparent shadow-sm px-4 py-2 bg-${color}-600 text-base
-                font-medium text-white hover:bg-${color}-700 focus:outline-none
-                focus:ring-2 focus:ring-offset-2 focus:ring-${color}-500 sm:ml-3
-                sm:w-auto sm:text-sm`"
-                @click="open = false; $emit('confirm')"
+                :color="color"
+                class="w-full sm:w-auto sm:ml-3"
+                @click="
+                  open = false;
+                  $emit('confirm');
+                "
               >
-                {{ actionText }}
-              </button>
+                {{ confirmText }}
+              </Button>
 
               <button
                 ref="cancelButtonRef"
                 type="button"
-                class="mt-3 w-full inline-flex justify-center rounded-md border
-                border-gray-300 shadow-sm px-4 py-2 bg-white text-base
-                font-medium text-gray-700 hover:bg-gray-50 focus:outline-none
-                focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0
-                sm:ml-3 sm:w-auto sm:text-sm"
+                :class="`mt-3 w-full inline-flex justify-center rounded-md
+                border border-neutral-300 shadow-sm px-4 py-2 bg-white
+                text-base font-medium text-neutral-700 hover:bg-neutral-50
+                focus:outline-none focus:ring-2 focus:ring-offset-2
+                focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm`"
                 @click="open = false"
               >
                 Cancel
@@ -116,29 +118,31 @@
 
   <slot
     name="activator"
-    :onClick="() => { open = true; }"
+    @click="open = true"
   />
 </template>
 
 <script lang="ts">
 import {
-  defineComponent, ref, FunctionalComponent, PropType, h,
+  defineComponent, ref, FunctionalComponent, PropType,
 } from 'vue';
 import {
-  Dialog, DialogOverlay, DialogTitle, TransitionChild, TransitionRoot,
+  Dialog,
+  DialogOverlay,
+  DialogTitle,
+  TransitionChild,
+  TransitionRoot,
 } from '@headlessui/vue';
-import {
-  ExclamationIcon, XCircleIcon, CheckCircleIcon, InformationCircleIcon,
-} from '@heroicons/vue/outline';
+import { Button } from '@/views/components';
 
-export const Confirm = defineComponent({
+export default defineComponent({
   components: {
     Dialog,
     DialogOverlay,
     DialogTitle,
     TransitionChild,
     TransitionRoot,
-    ExclamationIcon,
+    Button,
   },
 
   props: {
@@ -146,7 +150,7 @@ export const Confirm = defineComponent({
       type: String,
       default: undefined,
     },
-    actionText: {
+    confirmText: {
       type: String,
       default: 'Confirm',
     },
@@ -168,30 +172,4 @@ export const Confirm = defineComponent({
     return { open };
   },
 });
-
-export const DangerConfirm: FunctionalComponent = (_, { attrs, slots }) => h(
-  Confirm,
-  { color: 'danger', icon: XCircleIcon, ...attrs },
-  slots,
-);
-
-export const WarningConfirm: FunctionalComponent = (_, { attrs, slots }) => h(
-  Confirm,
-  { color: 'warning', icon: ExclamationIcon, ...attrs },
-  slots,
-);
-
-export const InfoConfirm: FunctionalComponent = (_, { attrs, slots }) => h(
-  Confirm,
-  { color: 'info', icon: InformationCircleIcon, ...attrs },
-  slots,
-);
-
-export const SuccessConfirm: FunctionalComponent = (_, { attrs, slots }) => h(
-  Confirm,
-  { color: 'success', icon: CheckCircleIcon, ...attrs },
-  slots,
-);
-
-export default Confirm;
 </script>

@@ -7,8 +7,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { Container, SectionHeading } from '@/views/components';
+import {
+  defineComponent,
+} from 'vue';
+import {
+  Container, SectionHeading,
+} from '@/views/components';
 
 export default defineComponent({
   components: {

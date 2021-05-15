@@ -1,51 +1,49 @@
 <template>
   <div
+    v-if="paginatorInfo.total > ($route.query.first ?? 10)"
     class="bg-white px-4 py-3 flex items-center justify-between border-t border-neutral-200 sm:px-6"
   >
     <div class="flex-1 flex justify-between sm:hidden">
-      <WhiteButton
+      <Button
         :to="
-          $props.paginatorInfo.firstItem > 1
-            ? {
-              query: {
-                ...$route.query,
-                page: $props.paginatorInfo.currentPage - 1,
-              },
-            }
+          paginatorInfo.firstItem > 1
+            ? { query: getPageQuery(paginatorInfo.currentPage - 1) }
             : undefined
         "
-        :disabled="$props.paginatorInfo.firstItem === 1"
+        :disabled="paginatorInfo.firstItem === 1"
+        white
       >
         Previous
-      </WhiteButton>
+      </Button>
 
-      <WhiteButton
+      <Button
         :to="
-          $props.paginatorInfo.lastItem < $props.paginatorInfo.total
+          paginatorInfo.lastItem < paginatorInfo.total
             ? {
               query: {
                 ...$route.query,
-                page: $props.paginatorInfo.currentPage + 1,
+                page: paginatorInfo.currentPage + 1,
               },
             }
             : undefined
         "
-        :disabled="$props.paginatorInfo.lastItem === $props.paginatorInfo.total"
+        :disabled="paginatorInfo.lastItem === paginatorInfo.total"
         class="ml-3"
+        white
       >
         Next
-      </WhiteButton>
+      </Button>
     </div>
 
     <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
       <div>
         <p class="text-sm text-neutral-700">
           Showing
-          <span class="font-medium">{{ $props.paginatorInfo.firstItem }}</span>
+          <span class="font-medium">{{ paginatorInfo.firstItem }}</span>
           to
-          <span class="font-medium">{{ $props.paginatorInfo.lastItem }}</span>
+          <span class="font-medium">{{ paginatorInfo.lastItem }}</span>
           of
-          <span class="font-medium">{{ $props.paginatorInfo.total }}</span>
+          <span class="font-medium">{{ paginatorInfo.total }}</span>
           results
         </p>
       </div>
@@ -55,11 +53,10 @@
           Per page
 
           <select
-            :value="$route.query.first ?? 10"
-            class="ml-1 focus:ring-indigo-500 focus:border-indigo-500 h-full py-0
-            pl-2 pr-7 border-transparent bg-transparent text-neutral-500
-            sm:text-sm rounded-md"
-            @change="$router.push({ query: { ...$route.query, first: $event.target.value } })"
+            v-model="first"
+            :class="`ml-1 focus:ring-indigo-500 focus:border-indigo-500 h-full
+            py-0 pl-2 pr-7 border-transparent bg-transparent text-neutral-500
+            sm:text-sm rounded-md`"
           >
             <option
               v-for="item in [10, 20, 30, 50, 80, 100]"
@@ -76,45 +73,46 @@
           aria-label="Pagination"
         >
           <component
-            :is="$props.paginatorInfo.firstItem > 1 ? 'RouterLink' : 'a'"
+            :is="paginatorInfo.firstItem > 1 ? 'RouterLink' : 'a'"
             :to="
-              $props.paginatorInfo.firstItem > 1
-                ? {
-                  query: {
-                    ...$route.query,
-                    page: $props.paginatorInfo.currentPage - 1,
-                  },
-                }
+              paginatorInfo.firstItem > 1
+                ? { query: getPageQuery(paginatorInfo.currentPage - 1) }
                 : undefined
             "
-            class="relative inline-flex items-center px-2 py-2 rounded-l-md
-            border border-neutral-300 bg-white text-sm font-medium text-neutral-500
-            hover:bg-neutral-50"
+            :class="`relative inline-flex items-center px-2 py-2 rounded-l-md
+            border border-neutral-300 bg-white text-sm font-medium
+            text-neutral-500 hover:bg-neutral-50 focus:z-10 focus:outline-none
+            focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500`"
           >
             <span class="sr-only">Previous</span>
 
             <ChevronLeftIcon
               class="h-5 w-5"
+              :class="{ 'opacity-50': paginatorInfo.firstItem === 1 }"
               aria-hidden="true"
             />
           </component>
 
           <template
-            v-for="(page, pageIdx) in $options.generatePages(
-              $props.paginatorInfo.currentPage,
-              $props.paginatorInfo.lastPage
+            v-for="(page, pageIdx) in generatePages(
+              paginatorInfo.currentPage,
+              paginatorInfo.lastPage
             )"
             :key="pageIdx"
           >
             <RouterLink
               v-if="page"
               :key="pageIdx"
-              :to="{ query: { ...$route.query, page } }"
-              class="relative inline-flex items-center px-4 py-2 border
-              border-neutral-300 bg-white text-sm font-medium text-neutral-700"
-              :class="
-                page === $props.paginatorInfo.currentPage ? 'bg-neutral-50' : 'hover:bg-neutral-50'
-              "
+              :to="{ query: getPageQuery(page) }"
+              :class="[
+                `relative inline-flex items-center px-4 py-2 border
+                border-neutral-300 text-sm font-medium text-neutral-700
+                focus:z-10 focus:outline-none focus:ring-1
+                focus:ring-indigo-500 focus:border-indigo-500`,
+                page === paginatorInfo.currentPage
+                  ? 'bg-neutral-100'
+                  : 'hover:bg-neutral-50',
+              ]"
             >
               {{ page }}
             </RouterLink>
@@ -122,8 +120,10 @@
             <span
               v-else
               :key="-pageIdx"
-              class="relative inline-flex items-center px-4 py-2 border
-              border-neutral-300 bg-white text-sm font-medium text-neutral-700"
+              :class="`relative inline-flex items-center px-4 py-2 border
+              border-neutral-300 bg-white text-sm font-medium text-neutral-700
+              focus:z-10 focus:outline-none focus:ring-1 focus:ring-indigo-500
+              focus:border-indigo-500`"
             >
               ...
             </span>
@@ -131,28 +131,28 @@
 
           <component
             :is="
-              $props.paginatorInfo.lastItem < $props.paginatorInfo.total
-                ? 'RouterLink'
-                : 'a'
+              paginatorInfo.lastItem < paginatorInfo.total ? 'RouterLink' : 'a'
             "
             :to="
-              $props.paginatorInfo.lastItem < $props.paginatorInfo.total
+              paginatorInfo.lastItem < paginatorInfo.total
                 ? {
                   query: {
                     ...$route.query,
-                    page: $props.paginatorInfo.currentPage + 1,
+                    page: paginatorInfo.currentPage + 1,
                   },
                 }
                 : undefined
             "
-            class="relative inline-flex items-center px-2 py-2 rounded-r-md
-            border border-neutral-300 bg-white text-sm font-medium text-neutral-500
-            hover:bg-neutral-50"
+            :class="`relative inline-flex items-center px-2 py-2 rounded-r-md
+            border border-neutral-300 bg-white text-sm font-medium
+            text-neutral-500 hover:bg-neutral-50 focus:z-10 focus:outline-none
+            focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500`"
           >
             <span class="sr-only">Next</span>
 
             <ChevronRightIcon
               class="h-5 w-5"
+              :class="{ 'opacity-50': paginatorInfo.lastItem === paginatorInfo.total }"
               aria-hidden="true"
             />
           </component>
@@ -160,12 +160,21 @@
       </div>
     </div>
   </div>
+
+  <div
+    v-else-if="!paginatorInfo.total"
+    :class="`bg-white px-4 py-3 flex items-center justify-center border-t
+    border-neutral-200 sm:px-6 text-neutral-500`"
+  >
+    No records found
+  </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { WhiteButton } from '@/views/components';
+import { defineComponent, computed } from 'vue';
+import { Button } from '@/views/components';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/solid';
+import { useRoute, useRouter } from 'vue-router';
 
 export function generatePages(currentPage: number, lastPage: number) {
   const center: number[] = [
@@ -201,9 +210,9 @@ export function generatePages(currentPage: number, lastPage: number) {
   return [1, ...filteredCenter, lastPage];
 }
 
-export const Pagination = defineComponent({
+export default defineComponent({
   components: {
-    WhiteButton,
+    Button,
     ChevronLeftIcon,
     ChevronRightIcon,
   },
@@ -215,8 +224,38 @@ export const Pagination = defineComponent({
     },
   },
 
-  generatePages,
-});
+  setup() {
+    const route = useRoute();
+    const router = useRouter();
 
-export default Pagination;
+    const first = computed({
+      get: () => route.query.first ?? 10,
+      set: (val) => {
+        const { first: _, ...query } = route.query;
+
+        if (val && val !== 10) {
+          query.first = val;
+        }
+
+        router.push({ query });
+      },
+    });
+
+    const getPageQuery = (page: number) => {
+      const { page: _, ...query } = route.query;
+
+      if (page !== 1) {
+        query.page = page.toString();
+      }
+
+      return query;
+    };
+
+    return {
+      generatePages,
+      getPageQuery,
+      first,
+    };
+  },
+});
 </script>

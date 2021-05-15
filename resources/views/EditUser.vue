@@ -1,121 +1,79 @@
 <template>
   <Container>
-    <form @submit.prevent="onSubmit">
-      <Card>
-        <CardHeader>
-          <template #subtitle>
-            <Id>{{ user.id }}</Id>
-          </template>
+    <FormCard @submit="onSubmit">
+      <CardHeader>
+        <template #subtitle>
+          <Id>{{ user.id }}</Id>
+        </template>
 
-          <SecondaryButton
-            :to="{ name: 'UserDetails', params: { id: user.id } }"
-            color="neutral"
-          >
-            Details
-          </SecondaryButton>
-        </CardHeader>
+        <Button
+          :to="{ name: 'UserDetails', params: { id: user.id } }"
+          color="neutral"
+          secondary
+        >
+          Details
+        </Button>
+      </CardHeader>
 
-        <CardBody>
-          <dl class="grid grid-cols-2 gap-6">
-            <div class="col-span-2 lg:col-span-1">
-              <TextField
-                v-model="form.name"
-                :errors="errors['input.name']"
-                label="Name"
-                required
-              />
-            </div>
+      <UserDetailsCardBody :user="user">
+        <template #name>
+          <Input
+            v-model.trim="form.name"
+            :errors="errors.name"
+            label="Name"
+            required
+          />
+        </template>
 
-            <div class="col-span-2 lg:col-span-1">
-              <EmailField
-                v-model="form.email"
-                :errors="errors['input.email']"
-                required
-              />
-            </div>
+        <template #email>
+          <EmailInput
+            v-model.trim="form.email"
+            :errors="errors.email"
+            required
+          />
+        </template>
+      </UserDetailsCardBody>
 
-            <div class="col-span-2 lg:col-span-1">
-              <Dt>Created At</Dt>
-              <Dd>
-                <DateTime>{{ user.createdAt }}</DateTime>
-              </Dd>
-            </div>
-
-            <div class="col-span-2 lg:col-span-1">
-              <Dt>Updated At</Dt>
-              <Dd>
-                <DateTime>{{ user.updatedAt }}</DateTime>
-              </Dd>
-            </div>
-          </dl>
-        </CardBody>
-
-        <CardFooter>
-          <WhiteButton
-            type="button"
-            @click="reset"
-          >
-            Reset
-          </WhiteButton>
-
-          <Button
-            :disabled="fetching"
-            class="ml-3"
-          >
-            Update
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+      <EditCardFooter v-bind="{ onReset, updating }" />
+    </FormCard>
   </Container>
 </template>
 
 <script lang="ts">
 import {
-  defineComponent, h, ref, watchEffect,
+  defineComponent, h, PropType, ref, watchEffect,
 } from 'vue';
 import {
   Container,
   CardHeader,
-  CardBody,
-  CardFooter,
+  EditCardFooter,
   Button,
-  WhiteButton,
-  SecondaryButton,
-  Card,
-  EmailField,
-  TextField,
-  Dt,
-  Dd,
-  DateTime,
+  FormCard,
+  EmailInput,
+  Input,
   Id,
 } from '@/views/components';
+import UserDetailsCardBody from '@/views/components/UserDetailsCardBody.vue';
 import { useRouter } from 'vue-router';
-import { useMutation, gql } from '@urql/vue';
-import { useErrors } from '@/scripts/composables';
+import { User, useUpdateUser } from '@/scripts/composables';
 import { notify } from '@/scripts/notifications';
 
 export default defineComponent({
   components: {
     Container,
     CardHeader,
-    CardBody,
-    CardFooter,
+    UserDetailsCardBody,
+    FormCard,
+    EditCardFooter,
     Button,
-    WhiteButton,
-    SecondaryButton,
-    Card,
-    EmailField,
-    TextField,
-    Dt,
-    Dd,
-    DateTime,
+    EmailInput,
+    Input,
     Id,
   },
 
   props: {
     user: {
-      type: Object,
+      type: Object as PropType<User>,
       required: true,
     },
   },
@@ -123,30 +81,21 @@ export default defineComponent({
   setup(props) {
     const router = useRouter();
     const form = ref();
+    const { updateUser, updating, errors } = useUpdateUser();
 
-    const { executeMutation: updateUser, fetching, error } = useMutation(gql`
-      mutation($input: UpdateUser!) {
-        updateUser(input: $input) {
-          id
-        }
-      }
-    `);
-
-    const errors = useErrors(error);
-
-    const reset = () => {
+    const onReset = () => {
       const { name, email } = props.user;
       form.value = { name, email };
       errors.value = {};
     };
 
-    watchEffect(reset);
+    watchEffect(onReset);
 
     const onSubmit = async () => {
       const { id } = props.user;
-      await updateUser({ input: { id, ...form.value! } });
+      const { error } = await updateUser({ id, ...form.value! });
 
-      if (error.value) {
+      if (error) {
         return;
       }
 
@@ -160,11 +109,11 @@ export default defineComponent({
     };
 
     return {
-      reset,
+      onReset,
       onSubmit,
       errors,
       form,
-      fetching,
+      updating,
     };
   },
 });

@@ -1,47 +1,31 @@
 <template>
   <Container>
-    <form @submit.prevent="onSubmit">
-      <Card>
-        <CardHeader />
+    <FormCard @submit="onSubmit">
+      <CardHeader />
 
-        <CardBody>
-          <div class="grid grid-cols-2 gap-6">
-            <div class="col-span-2 lg:col-span-1">
-              <TextField
-                v-model="form.name"
-                :errors="errors['input.name']"
-                label="Name"
-                required
-              />
-            </div>
-
-            <div class="col-span-2 lg:col-span-1">
-              <EmailField
-                v-model="form.email"
-                :errors="errors['input.email']"
-                required
-              />
-            </div>
+      <CardBody>
+        <div class="grid grid-cols-2 gap-6">
+          <div class="col-span-2 lg:col-span-1">
+            <Input
+              v-model="form.name"
+              :errors="errors.name"
+              label="Name"
+              required
+            />
           </div>
-        </CardBody>
 
-        <CardFooter>
-          <WhiteButton
-            type="button"
-            @click="reset"
-          >
-            Reset
-          </WhiteButton>
+          <div class="col-span-2 lg:col-span-1">
+            <EmailInput
+              v-model="form.email"
+              :errors="errors.email"
+              required
+            />
+          </div>
+        </div>
+      </CardBody>
 
-          <Button
-            :disabled="fetching"
-            class="ml-3"
-          >
-            Create
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+      <CreateCardFooter v-bind="{ onReset, creating }" />
+    </FormCard>
   </Container>
 </template>
 
@@ -49,72 +33,58 @@
 import { defineComponent, ref } from 'vue';
 import {
   Container,
-  Card,
-  Button,
-  EmailField,
-  TextField,
+  FormCard,
+  EmailInput,
+  Input,
   CardHeader,
   CardBody,
-  CardFooter,
-  WhiteButton,
+  CreateCardFooter,
 } from '@/views/components';
 import { useRouter } from 'vue-router';
-import { useMutation } from '@urql/vue';
 import { notify } from '@/scripts/notifications';
-import { useErrors } from '@/scripts/composables';
+import { useCreateUser } from '@/scripts/composables';
 
 export default defineComponent({
   components: {
-    Container,
-    Card,
     CardHeader,
+    Container,
+    FormCard,
     CardBody,
-    CardFooter,
-    EmailField,
-    TextField,
-    Button,
-    WhiteButton,
+    EmailInput,
+    Input,
+    CreateCardFooter,
   },
 
   setup() {
     const router = useRouter();
     const form = ref();
+    const { createUser, creating, errors } = useCreateUser();
 
-    const { executeMutation, error, fetching } = useMutation(`
-      mutation($input: CreateUser!) {
-        createUser(input: $input) {
-          id
-        }
-      }
-    `);
-
-    const errors = useErrors(error);
-
-    const reset = () => {
+    const onReset = () => {
       form.value = { name: '', email: '' };
       errors.value = {};
     };
 
-    reset();
+    onReset();
 
     const onSubmit = async () => {
-      const { data } = await executeMutation({ input: form.value });
+      const { data, error } = await createUser(form.value);
 
-      if (error.value) {
+      if (error) {
         return;
       }
 
-      const { id } = data.createUser;
+      const { id } = data!.createUser;
       notify.success('The user was successfully created.');
       router.push({ name: 'UserDetails', params: { id } });
     };
 
     return {
       onSubmit,
-      fetching,
+      creating,
       form,
       errors,
-      reset,
+      onReset,
     };
   },
 });
