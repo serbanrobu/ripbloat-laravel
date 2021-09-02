@@ -51,8 +51,10 @@ import RestoreButton from './RestoreButton.vue';
 import Loading from './Loading.vue';
 import NotFound from './NotFound.vue';
 import Textarea from './Textarea.vue';
+import SearchSelect from './SearchSelect.vue';
 
 export {
+  SearchSelect,
   BaseButton,
   Badge,
   Input,

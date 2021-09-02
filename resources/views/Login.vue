@@ -25,13 +25,13 @@
     <form @submit.prevent="onSubmit">
       <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 space-y-6">
-          <EmailField
+          <EmailInput
             v-model="form.email"
             :errors="errors.email"
             required
           />
 
-          <PasswordField
+          <PasswordInput
             v-model="form.password"
             :errors="errors.password"
             required
@@ -80,15 +80,15 @@ import { defineComponent, ref } from 'vue';
 import { loggedIn } from '@/scripts/auth';
 import { useRoute, useRouter } from 'vue-router';
 import {
-  EmailField, PasswordField, Button,
+  EmailInput, PasswordInput, Button,
 } from '@/views/components';
 import { notify } from '@/scripts/notifications';
 import axios from 'axios';
 
 export default defineComponent({
   components: {
-    EmailField,
-    PasswordField,
+    EmailInput,
+    PasswordInput,
     Button,
   },
 
